@@ -29,6 +29,24 @@
 #include <asm/uaccess.h>
 #include <asm/mmu_context.h>
 
+
+/** HW1 OS structs */
+struct forbidden_activity_info{
+	int syscall_req_level;
+	int proc_level;
+	int time;
+};
+
+struct log_array{
+	int indexWrite;
+	int indexRead;
+	int size;
+	int full;
+	struct forbidden_activity_info* array;
+};
+/** ------------------- */
+
+
 /* The idle threads do not count.. */
 int nr_threads;
 
@@ -592,6 +610,24 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 	struct task_struct *p;
 	struct completion vfork;
 
+	/* OS HW1 - check if calling process can call do_fork*/
+	/* assuming that the size of the log array is large enough (for hw) */
+	if(current->enable_policy == 1 && current->policy_level<2){
+		/* adding log */
+		current->logArray->array[current->logArray->indexWrite].syscall_req_level=2;
+		current->logArray->array[current->logArray->indexWrite].proc_level=current->policy_level;
+		current->logArray->array[current->logArray->indexWrite].time=jiffies;
+		++(current->logArray->indexWrite);
+		if(current->logArray->indexWrite==current->logArray->size){
+			current->logArray->indexWrite=0;
+		}
+		if(current->logArray->indexWrite==current->logArray->indexRead){
+			current->logArray->full=1;
+		}
+
+		return -EINVAL;
+	}
+
 	if ((clone_flags & (CLONE_NEWNS|CLONE_FS)) == (CLONE_NEWNS|CLONE_FS))
 		return -EINVAL;
 
@@ -612,6 +648,13 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 		goto fork_out;
 
 	*p = *current;
+
+	/* OS HW1 - clear the fields of the new proccess */
+	p->policy_level=2;
+	p->policy_enabled=0;
+	p->logArr=NULL;
+
+
 	p->tux_info = NULL;
 	p->cpus_allowed_mask &= p->cpus_allowed;
 

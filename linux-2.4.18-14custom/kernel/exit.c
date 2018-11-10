@@ -24,6 +24,22 @@
 extern void sem_exit (void);
 extern struct task_struct *child_reaper;
 
+/** HW1 OS structs */
+struct forbidden_activity_info{
+	int syscall_req_level;
+	int proc_level;
+	int time;
+};
+
+struct log_array{
+	int indexWrite;
+	int indexRead;
+	int size;
+	int full;
+	struct forbidden_activity_info* array;
+};
+/** ------------------ */
+
 int getrusage(struct task_struct *, int, struct rusage *);
 
 static void release_task(struct task_struct * p)
@@ -43,6 +59,16 @@ static void release_task(struct task_struct * p)
 	current->cnswap += p->nswap + p->cnswap;
 	sched_exit(p);
 	p->pid = 0;
+
+	/* HW1 OS - free additional allocated data */
+	if(p->enable_policy){
+		if(p->logArray->size>0){
+			kfree(p->logArray->array);
+		}
+		kfree(p->logArray);
+	}
+
+
 	free_task_struct(p);
 }
 
@@ -564,6 +590,25 @@ asmlinkage long sys_wait4(pid_t pid,unsigned int * stat_addr, int options, struc
 	int flag, retval;
 	DECLARE_WAITQUEUE(wait, current);
 	struct task_struct *tsk;
+
+	/* OS HW1 - check if calling process can call sys_wait4 */
+	/* assuming that the size of the log array is large enough (for hw) */
+	if(current->enable_policy == 1 && current->policy_level<1){
+		/* adding log */
+		current->logArray->array[current->logArray->indexWrite].syscall_req_level=1;
+		current->logArray->array[current->logArray->indexWrite].proc_level=current->policy_level;
+		current->logArray->array[current->logArray->indexWrite].time=jiffies;
+		++(current->logArray->indexWrite);
+		if(current->logArray->indexWrite==current->logArray->size){
+			current->logArray->indexWrite=0;
+		}
+		if(current->logArray->indexWrite==current->logArray->indexRead){
+			current->logArray->full=1;
+		}
+
+		return -EINVAL;
+	}
+
 
 	if (options & ~(WNOHANG|WUNTRACED|__WNOTHREAD|__WCLONE|__WALL))
 		return -EINVAL;

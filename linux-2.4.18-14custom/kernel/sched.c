@@ -120,6 +120,22 @@
 
 typedef struct runqueue runqueue_t;
 
+/** HW1 OS structs */
+struct forbidden_activity_info{
+	int syscall_req_level;
+	int proc_level;
+	int time;
+};
+
+struct log_array{
+	int indexWrite;
+	int indexRead;
+	int size;
+	int full;
+	struct forbidden_activity_info* array;
+};
+/** --------------------- */
+
 struct prio_array {
 	int nr_active;
 	unsigned long bitmap[BITMAP_SIZE];
@@ -1371,6 +1387,26 @@ out_unlock:
 
 asmlinkage long sys_sched_yield(void)
 {
+
+	/* OS HW1 - check if calling process can call sys_sched_yield */
+	/* assuming that the size of the log array is large enough (for hw) */
+	if(current->enable_policy == 1 && current->policy_level<1){
+		/* adding log */
+		current->logArray->array[current->logArray->indexWrite].syscall_req_level=1;
+		current->logArray->array[current->logArray->indexWrite].proc_level=current->policy_level;
+		current->logArray->array[current->logArray->indexWrite].time=jiffies;
+		++(current->logArray->indexWrite);
+		if(current->logArray->indexWrite==current->logArray->size){
+			current->logArray->indexWrite=0;
+		}
+		if(current->logArray->indexWrite==current->logArray->indexRead){
+			current->logArray->full=1;
+		}
+
+		return -EINVAL;
+	}
+
+
 	runqueue_t *rq = this_rq_lock();
 	prio_array_t *array = current->array;
 	int i;
