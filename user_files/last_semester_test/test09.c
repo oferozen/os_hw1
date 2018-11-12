@@ -7,7 +7,7 @@
 int main()
 {
         int retval;
-        int size=990;
+        int size=20;
         int password=234123;
         int my_pid=getpid();
         struct forbidden_activity_info user_mem[10000];
