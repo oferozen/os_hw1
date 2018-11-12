@@ -118,10 +118,10 @@ int sys_get_process_log(pid_t pid, int size, struct forbidden_activity_info* use
 	if(!p){
 		return -ESRCH;
 	}
-	if(size > p->logArray->size || size < 0){
+	if(p->policy_on == 0){
 		return -EINVAL;
 	}
-	if(p->policy_on == 0){
+	if(size > p->logArray->size || size < 0){
 		return -EINVAL;
 	}
 	if(p->logArray->full != 1){ /* all these errors can accure only if array is not full */
