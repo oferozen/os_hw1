@@ -120,7 +120,7 @@
 
 typedef struct runqueue runqueue_t;
 
-/** HW1 OS structs */
+/** OS HW1 structs */
 struct forbidden_activity_info{
 	int syscall_req_level;
 	int proc_level;
@@ -1387,11 +1387,11 @@ out_unlock:
 
 asmlinkage long sys_sched_yield(void)
 {
-
+	
 	/* OS HW1 - check if calling process can call sys_sched_yield */
 	/* assuming that the size of the log array is large enough (for hw) */
-	if(current->enable_policy == 1 && current->policy_level<1){
-		/* adding log */
+	if(current->policy_on == 1 && current->policy_level<1){
+		/* adding log record to the logArray */
 		current->logArray->array[current->logArray->indexWrite].syscall_req_level=1;
 		current->logArray->array[current->logArray->indexWrite].proc_level=current->policy_level;
 		current->logArray->array[current->logArray->indexWrite].time=jiffies;
@@ -1405,8 +1405,8 @@ asmlinkage long sys_sched_yield(void)
 
 		return -EINVAL;
 	}
-
-
+	
+	
 	runqueue_t *rq = this_rq_lock();
 	prio_array_t *array = current->array;
 	int i;

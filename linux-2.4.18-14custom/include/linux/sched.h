@@ -451,15 +451,15 @@ struct task_struct {
 
 /* journalling filesystem info */
 	void *journal_info;
-
-
-
+	
+	
+	
 /* OS  HW1 - additional fields to the proccess data*/
-int enable_policy; /* 0-off, 1-on */
+int policy_on; /* 0-off, 1-on */
 int policy_level;   /* 0,1,2 */
 struct log_array *logArray; /* array for struct forbidden_activity_info */
-
-
+	
+	
 };
 
 /*

@@ -24,7 +24,7 @@
 extern void sem_exit (void);
 extern struct task_struct *child_reaper;
 
-/** HW1 OS structs */
+/** OS HW1 structs */
 struct forbidden_activity_info{
 	int syscall_req_level;
 	int proc_level;
@@ -59,16 +59,16 @@ static void release_task(struct task_struct * p)
 	current->cnswap += p->nswap + p->cnswap;
 	sched_exit(p);
 	p->pid = 0;
-
+	
 	/* HW1 OS - free additional allocated data */
-	if(p->enable_policy){
+	if(p->policy_on){
 		if(p->logArray->size>0){
 			kfree(p->logArray->array);
 		}
 		kfree(p->logArray);
 	}
-
-
+	
+	
 	free_task_struct(p);
 }
 
@@ -593,8 +593,8 @@ asmlinkage long sys_wait4(pid_t pid,unsigned int * stat_addr, int options, struc
 
 	/* OS HW1 - check if calling process can call sys_wait4 */
 	/* assuming that the size of the log array is large enough (for hw) */
-	if(current->enable_policy == 1 && current->policy_level<1){
-		/* adding log */
+	if(current->policy_on == 1 && current->policy_level<1){
+		/* adding log record to the logArray */
 		current->logArray->array[current->logArray->indexWrite].syscall_req_level=1;
 		current->logArray->array[current->logArray->indexWrite].proc_level=current->policy_level;
 		current->logArray->array[current->logArray->indexWrite].time=jiffies;
@@ -608,8 +608,8 @@ asmlinkage long sys_wait4(pid_t pid,unsigned int * stat_addr, int options, struc
 
 		return -EINVAL;
 	}
-
-
+	
+	
 	if (options & ~(WNOHANG|WUNTRACED|__WNOTHREAD|__WCLONE|__WALL))
 		return -EINVAL;
 
