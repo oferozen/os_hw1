@@ -1,0 +1,55 @@
+***test01 (6 points)	
+- checks return values of enable_policy on failures
+
+***test02 (6 points)	
+- checks return values of disable_policy on failures
+
+***test03 (6 points)
+- checks return values of set_process_capabilities on failures
+
+***test04 (8 points)	
+- checks return values of get_process_log on failures
+
+***test05 (8 points)	
+- simple checks of the policy mechanism:
+	* checks that fork doesn't work for process with privilege level 0 or 1.
+	* same thing for other discussed system calls.
+
+***test06 (8 points)	
+- simple checks of the forbidden activities log 
+    * checks that the forbidden activities log of process is removed after disabling the policy to this process
+	* checks that the forbidden activities log of process is ordered by time of occuring.
+	* checks that the returned forbidden activities from get_process_log are deleted from the log.
+	
+***test07 (8 points)	
+- fork checks
+    * checks that the new process's forbidden list is empty.
+	* checks that the policy is disabled for the new process.
+	
+***test08 (10 points)	
+- "communication between processes"
+	* let some processes invoke get, enable, disable on other processes
+	
+***test09 (10 points)	
+- stress test 1
+	* enable and then do forbidden activities and get_process_log in loop, if there is a memory leak, the kernel may freeze	
+
+
+***test10 (10 points)	
+- ask for more forbidden activities in get_process_log system call than exists 
+	* checks that for a process with x forbidden activities if we ask for y>x activities than we get -EINVAL
+	  and the log does not affected at all.
+
+***test11 (10 points)	
+- parallel processes
+	* make some processes, every process will do some forbidden activities,
+	  and then we will check that every process has only its forbidden activities in its log
+
+***test12	this test was canceled, and therefore is not appear at your logs.
+
+***test13 (10 points)	
+- stress test 3
+	* checks that everything is just fine if we do not enabling the policy to a process.
+
+Note: If a test timed out, it means that something didn't went as expected.
+(i.e it doesn't necessarily mean you have an infinite loop or a deadlock)
